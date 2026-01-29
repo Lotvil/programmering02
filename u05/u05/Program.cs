@@ -4,7 +4,28 @@
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
+            Console.Clear();
+
+            char c = Console.ReadKey().KeyChar;
+
+            switch (c)
+            {
+                case '1':     // Om val har värdet 1 så fortsätter koden här
+                    Console.WriteLine("Val 1");
+                    break;    // break avslutar varje "case" och måste finnas med
+                case '2':
+                    Console.WriteLine("Val 2");
+                    break;
+                case '3':     // Flera case kan listas efter varandra
+                case '4':     // Alla dessa case kommer köra samma instruktion
+                case '5':
+                    Console.WriteLine("Val 3, 4 eller 5");
+                    break;
+                default:    // Default-caset kommer ta hand om alla andra val
+                    Console.WriteLine("Alla andra val");
+                    break;
+            }
         }
     }
 }
