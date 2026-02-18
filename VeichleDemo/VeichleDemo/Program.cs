@@ -6,7 +6,7 @@
         {
             Console.OutputEncoding = System.Text.Encoding.UTF8;
             Console.Clear();
-
+            /*
             Console.WriteLine("Ange information om bilen");   // Skriver ut till konsollen
 
             Console.Write("Registreringsnummer: ");          // Registreringsnummer
@@ -31,10 +31,14 @@
             }
 
             // Skapa ny bil med inmatade värden
-            Car c = new Car(regNr, make, model, year, forSale);
+            Car c = new Car(regNr, make, model, year, forSale);*/
+
+            Car c = new Car("ABC123", "Volvo", "V70", 2005, true);
+            Lorry l = new Lorry("XYZ789", "Scania", "R500", 2010, false, 20000);
 
             // Skriv ut info om bilen c
             Console.WriteLine("\n" + c.ToString());
+            Console.WriteLine("\n" + l.ToString());
         }
     }
 }

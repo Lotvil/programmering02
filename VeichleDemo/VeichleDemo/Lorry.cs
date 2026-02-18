@@ -1,0 +1,35 @@
+﻿using System;
+
+namespace VehicleDemo
+{
+    public class Lorry : Vehicle
+    {
+
+        public int load
+        {
+            get { return load; }
+            set
+            {
+                if (value < 0)
+                {
+                    load = -1;
+                }
+                else
+                {
+                    load = value;
+                }
+            }
+        }
+        public Lorry(String regNr, String make, String model, int year, bool forSale, int load) : base(regNr, make, model, year, forSale)
+        {
+            this.load = load;
+        }
+
+        public new String ToString() 
+        {
+            String s = base.ToString();
+            s += String.Format("\nMaxlast: {0} kg", this.load);
+            return s;
+        }
+    }
+}

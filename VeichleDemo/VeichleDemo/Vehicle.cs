@@ -90,9 +90,9 @@ namespace VehicleDemo
             }
         }
 
-        public override string ToString()
+        public override String ToString()
         {
-            return String.Format("\nBilinformation\nReg: {0}, {1} {2} [{3}]\n{4}",
+            return String.Format("\nBilinformation\nReg: {0}, {1} {2} [{3}]{4}",
                                      this.RegNr, this.Make, this.Model, this.YearToString(), this.ForSaleToString());
         }
     }
