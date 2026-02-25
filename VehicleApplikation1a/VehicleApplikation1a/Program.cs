@@ -15,11 +15,9 @@ namespace VehicleApplikation1a
             Console.Clear();
 
             //Skapar variabler
-            List<Vehicle> carList = new List<Vehicle>();
             char menuSelection;
 
             //Lägger till bilar
-            StartCars(carList);
             StartVehicle();
 
             //Program loopen
@@ -177,21 +175,6 @@ namespace VehicleApplikation1a
             vehicleList.Clear();
         }
 
-        /// <summary>
-        /// Metoden lägger in fyra biler och är till för testning
-        /// </summary>
-        /// <param name="carList"></param>
-        /// <returns>Den uppdaterade nya listan</returns>
-        public static List<Vehicle> StartCars(List<Vehicle> carList)
-        {
-            //Lägger till bilen i listan
-            carList.Add(new Car("ABC123", "Volvo", "v90", 1987, true));
-            carList.Add(new Car("DEF456", "Toyota", "Corolla", 2015, false));
-            carList.Add(new Car("GHI789", "BMW", "320i", 2020, true));
-            carList.Add(new Car("JKL321", "Audi", "A4", 2018, false));
-            //Returnera listan
-            return carList;
-        }
         /// <summary>
         /// Lägger till fem fordon i listan, både bilar och lastbilar, och är till för testning
         /// </summary>
