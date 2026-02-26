@@ -59,7 +59,7 @@ namespace VehicleApplikation1a
             string menu = "\n\n###############################" +
                   "\n##                           ##" +
                   "\n## Programmeny               ##" +
-                  "\n## Antal bilar: " + vehicleList.Count + " st.        ##" +
+                  "\n## Antal fordon: " + vehicleList.Count + " st.        ##" +
                   "\n##                           ##" +
                   "\n###############################" +
                   "\n1. Skriv ut listan" +
@@ -141,11 +141,22 @@ namespace VehicleApplikation1a
         {
             int i = 1;
 
-            Console.WriteLine("\n\nNr\tRegNr\tMärke\tModel\tÅrsmodell\tTill salu?\tMaxLast");
+            Console.WriteLine("\n\nNr\tTyp\t\tRegNr\t\tMärke\t\tModel\t\tÅrsmodell\tTill salu?\tMaxLast");
 
             foreach (Vehicle c in vehicleList)
             {
-                Console.WriteLine($"{i++}\t{c.ToStringList()}");
+                string s = "";
+                
+                if (c.GetType().Name == "Car")
+                {
+                    s = "Bil";
+                }
+                else
+                {
+                    s = "Lastbil";
+                }
+
+                Console.WriteLine($"{i++}\t{s}\t\t{c.ToStringList()}");
             }
         }
 

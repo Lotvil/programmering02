@@ -5,8 +5,15 @@ namespace Vehicleapplikation1a
 {
     public class Lorry : Vehicle
     {
-
+        //
+        // Medlemsvariabler
+        //
         private int load;
+        
+        //
+        //Properties
+        //
+
         public int Load
         {
             get { return load; }
@@ -22,11 +29,25 @@ namespace Vehicleapplikation1a
                 }
             }
         }
+
+        /// <summary>
+        /// Konstruktor
+        /// </summary>
+        /// <param name="regNr"></param>
+        /// <param name="make"></param>
+        /// <param name="model"></param>
+        /// <param name="year"></param>
+        /// <param name="forSale"></param>
+        /// <param name="load"></param>
         public Lorry(String regNr, String make, String model, int year, bool forSale, int load) : base(regNr, make, model, year, forSale)
         {
             this.Load = load;
         }
 
+        /// <summary>
+        /// Lägger till load till den vanliga ToString() i föräldern
+        /// </summary>
+        /// <returns>En string med maxLast tillagt</returns>
         public new String ToString() 
         {
             String s = base.ToString();
@@ -34,6 +55,10 @@ namespace Vehicleapplikation1a
             return s;
         }
 
+        /// <summary>
+        /// Lägger till load till den vanliga ToStringList() i föräldern
+        /// </summary>
+        /// <returns>En string med maxLast tillagt</returns>
         public override String ToStringList()
         {
             String s = base.ToStringList();
