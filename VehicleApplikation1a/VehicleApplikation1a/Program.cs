@@ -59,7 +59,7 @@ namespace VehicleApplikation1a
             string menu = "\n\n###############################" +
                   "\n##                           ##" +
                   "\n## Programmeny               ##" +
-                  "\n## Antal fordon: " + vehicleList.Count + " st.        ##" +
+                  "\n## Antal fordon: " + vehicleList.Count + " st.       ##" +
                   "\n##                           ##" +
                   "\n###############################" +
                   "\n1. Skriv ut listan" +
@@ -193,10 +193,11 @@ namespace VehicleApplikation1a
         {
             //Lägger till bilen i listan
             vehicleList.Add(new Car("ABC123", "Volvo", "v90", 1987, true));
-            vehicleList.Add(new Car("DEF456", "Toyota", "Corolla", 2015, false));
+            vehicleList.Add(new Lorry("PQR987", "Volvo", "FH16", 2021, true, 25000));
             vehicleList.Add(new Car("GHI789", "BMW", "320i", 2020, true));
             vehicleList.Add(new Lorry("JKL321", "Audi", "A4", 2018, false, 15000));
             vehicleList.Add(new Lorry("MNO654", "Scania", "R500", 2019, true, 30000));
+            vehicleList.Add(new Car("DEF456", "Toyota", "Corolla", 2015, false));
         }
     }
 }
