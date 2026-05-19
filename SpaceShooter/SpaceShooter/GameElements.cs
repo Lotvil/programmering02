@@ -9,6 +9,7 @@ using System.Numerics;
 using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace SpaceShooter
 {
@@ -23,15 +24,29 @@ namespace SpaceShooter
         static SpriteFont Arial32;
         static Menu menu;
         static Background background;
+        static HighScore highScore;
+        static GameWindow gameWindow;
+        static ContentManager gameContent;
+        static Random random = new Random();
+        static bool ignoreInput = false;
+        
 
         //olika gamestates
-        public enum State { Menu, Run, HighScore, Quit};
+        public enum State
+        {
+            Menu,
+            Run,
+            EnterHighScore,
+            HighScore,
+            Quit
+        };
         public static State currentState;
 
         //Initialize - ropas upp av game1.initilize då spelet startar.
 
         public static void Initialize() { 
             goldCoins = new List<GoldCoin>();
+            highScore = new HighScore(10);
         }
 
         // LoadContent - anropas av game1.loadcontent när spelet startar
@@ -56,14 +71,24 @@ namespace SpaceShooter
 
             background = new Background(content.Load<Texture2D>("background"), window);
 
+            highScore.LoadFromFile("highscore.txt");
+            gameWindow = window;
+            gameContent = content;
+
         }
 
         // MenuUpdate - kontrollerar vad användaren väljer i menyn
         public static State MenuUpdate(GameTime gameTime) {
+            if (ignoreInput)
+            {
+                if (Keyboard.GetState().IsKeyUp(Keys.Enter))
+                {
+                    ignoreInput = false; // unlock input once key is released
+                }
+                return State.Menu;
+            }
 
             return (State)menu.Update(gameTime);
-
-            
         }
 
         // MenuDraw - ritar meny
@@ -106,8 +131,6 @@ namespace SpaceShooter
                 }
 
             }
-
-            Random random = new Random();
             int newCoin = random.Next(0, 200);
             if (newCoin == 1)
             {
@@ -140,7 +163,7 @@ namespace SpaceShooter
 
             if (!player.IsAlive)
             {
-                return State.Menu;
+                return State.EnterHighScore;
             }
 
             return State.Run;
@@ -174,14 +197,14 @@ namespace SpaceShooter
         }
 
         //HighScoreDraw - metod för att rita ut highscore skärmen
-        public static void HighScoreDraw(SpriteBatch spriteBatch) {
+        public static void HighScoreDraw(SpriteBatch spriteBatch)
+        {
+            background.Draw(spriteBatch);
 
-            //rita lista
-
+            highScore.PrintDraw(spriteBatch, Arial32);
         }
         public static void GenerateEnemies(GameWindow window, ContentManager content)
         {
-            Random random = new Random();
             Texture2D tmpSprite = content.Load<Texture2D>("mine");
             for (int i = 0; i < 5; i++)
             {
@@ -204,11 +227,40 @@ namespace SpaceShooter
         {
             player.Reset(380, 400, 2.5f, 4.5f);
 
-            enemies.Clear();
-            GenerateEnemies(window, content);
+            player.IsAlive = true;
+            player.Points = 0;
 
+            enemies.Clear();
+            goldCoins.Clear();
+            GenerateEnemies(window, content);
         }
 
+        public static void SaveHighScore()
+        {
+            highScore.SaveToFile("highscore.txt");
+        }
 
+        public static State EnterHighScoreUpdate(GameTime gameTime)
+        {
+            if (highScore.EnterUpdate(gameTime, player.Points))
+            {
+                highScore.SaveToFile("highscore.txt");
+
+                Reset(gameWindow, gameContent);
+
+                ignoreInput = true;
+
+                return State.Menu;
+            }
+
+            return State.EnterHighScore;
+        }
+
+        public static void EnterHighScoreDraw(SpriteBatch spriteBatch)
+        {
+            background.Draw(spriteBatch);
+
+            highScore.EnterDraw(spriteBatch, Arial32);
+        }
     }
 }

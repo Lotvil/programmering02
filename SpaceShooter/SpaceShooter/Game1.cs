@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mime;
+using System.IO;
 
 namespace SpaceShooter
 {
@@ -39,10 +40,21 @@ namespace SpaceShooter
             GameElements.LoadContent(Content, Window);
         }
 
+        protected override void UnloadContent()
+        {
+            GameElements.SaveHighScore();
+        }
+
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
                 Exit();
+
+            if (Keyboard.GetState().IsKeyDown(Keys.Escape) &&
+                GameElements.currentState == GameElements.State.Run)
+            {
+                Exit();
+            }
 
             GameElements.State previousState = GameElements.currentState;
 
@@ -56,6 +68,9 @@ namespace SpaceShooter
                     break;
                 case GameElements.State.Quit:
                     Exit();
+                    break;
+                case GameElements.State.EnterHighScore:
+                    GameElements.currentState = GameElements.EnterHighScoreUpdate(gameTime);
                     break;
                 default:
                     GameElements.currentState = GameElements.MenuUpdate(gameTime);
@@ -83,6 +98,9 @@ namespace SpaceShooter
                     break;
                 case GameElements.State.HighScore:
                     GameElements.HighScoreDraw(_spriteBatch);
+                    break;
+                case GameElements.State.EnterHighScore:
+                    GameElements.EnterHighScoreDraw(_spriteBatch);
                     break;
                 default:
                     GameElements.MenuDraw(_spriteBatch);
