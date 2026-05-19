@@ -18,9 +18,11 @@ namespace SpaceShooter
         static Texture2D menuSprite;
         static Microsoft.Xna.Framework.Vector2 menuPos;
         static Player player;
+        public static Player Player => player;
         static List<Enemy> enemies;
-        static List<GoldCoin> goldCoins;
+        static List<Powerup> powerups;
         static Texture2D goldCoinSprite;
+        static Texture2D bulletBoostSprite;
         static SpriteFont Arial32;
         static Menu menu;
         static Background background;
@@ -29,6 +31,8 @@ namespace SpaceShooter
         static ContentManager gameContent;
         static Random random = new Random();
         static bool ignoreInput = false;
+        static int wave = 0;
+        static int enemiesPerWave = 4;
         
 
         //olika gamestates
@@ -45,7 +49,7 @@ namespace SpaceShooter
         //Initialize - ropas upp av game1.initilize då spelet startar.
 
         public static void Initialize() { 
-            goldCoins = new List<GoldCoin>();
+            powerups = new List<Powerup>();
             highScore = new HighScore(10);
         }
 
@@ -59,10 +63,12 @@ namespace SpaceShooter
             player = new Player(content.Load<Texture2D>("ship"), 380, 400, 2.5f, 4.5f, content.Load<Texture2D>("bullet"));
 
             enemies = new List<Enemy>();
-            GenerateEnemies(window, content);
+            //wave = 1;
+            //GenerateEnemies(window, content, enemiesPerWave);
 
             Arial32 = content.Load<SpriteFont>("Fonts/Arial32");
             goldCoinSprite = content.Load<Texture2D>("coin");
+            bulletBoostSprite = content.Load<Texture2D>("bulletboost");
 
             menu = new Menu((int)State.Menu);
             menu.AddItem(content.Load<Texture2D>("Menu/start"), (int)State.Run, window, content);
@@ -113,15 +119,28 @@ namespace SpaceShooter
                 {
                     if (e.CheckCollision(b)) // vid kollisoin
                     {
-                        e.IsAlive = false; //döda fienden
-                        player.Points++; // ge spelaren poäng
+                        e.Life -= 1;
+                        b.IsAlive = false; //ta bort kulan
+
+                        if (e.Life <= 0)
+                        {
+                            e.IsAlive = false;
+                            player.Points += e.Points;
+                        }
                     }
                 }
                 if (e.IsAlive)
                 {
                     if (e.CheckCollision(player))
                     {
-                        player.IsAlive = false;
+                        player.Life -= 1;
+
+                        e.IsAlive = false; // instantly kill enemy on contact
+
+                        if (player.Life <= 0)
+                        {
+                            player.IsAlive = false;
+                        }
                     }
                     e.Update(window);
                 }
@@ -131,39 +150,59 @@ namespace SpaceShooter
                 }
 
             }
-            int newCoin = random.Next(0, 200);
-            if (newCoin == 1)
+            int newPowerup = random.Next(0, 400);
+            if (1 < newPowerup && newPowerup < 4)
             {
                 int rndX = random.Next(0, window.ClientBounds.Width - goldCoinSprite.Width);
                 int rndY = random.Next(0, window.ClientBounds.Height - goldCoinSprite.Height);
-                goldCoins.Add(new GoldCoin(goldCoinSprite, rndX, rndY, gameTime));
+                powerups.Add(new GoldCoin(goldCoinSprite, rndX, rndY, gameTime));
+            }
+            if (newPowerup == 0)
+            {
+                int rndX = random.Next(0, window.ClientBounds.Width - bulletBoostSprite.Width);
+                int rndY = random.Next(0, window.ClientBounds.Height - bulletBoostSprite.Height);
+                powerups.Add(new BulletBoost(bulletBoostSprite, rndX, rndY, gameTime));
             }
 
             //Gå igenom listan med mynt ute
-            foreach (GoldCoin gc in goldCoins.ToList())
+            foreach (Powerup p in powerups.ToList())
             {
-                if (gc.IsAlive)
+                if (p.IsAlive)
                 {
                     //kollar om myntet dött än
-                    gc.Update(gameTime);
+                    p.Update(gameTime);
 
                     //kollar om det nuddar spelaren
-                    if (gc.CheckCollision(player))
+                    if (p.CheckCollision(player))
                     {
                         //ta bort myntet
-                        goldCoins.Remove(gc);
-                        player.Points++; // ge spelaren poäng
+                        powerups.Remove(p);
+                        player.Points += p.Points; // ge spelaren poäng
+                        if (p is BulletBoost)
+                        {
+                            player.BulletBoost(gameTime);
+                        }
                     }
                 }
                 else
                 { //ta bort guldmyntet då det dött.
-                    goldCoins.Remove(gc);
+                    powerups.Remove(p);
                 }
             }
 
             if (!player.IsAlive)
             {
                 return State.EnterHighScore;
+            }
+
+            if (enemies.Count == 0)
+            {
+                wave++;
+                if (wave > 3)
+                {
+                    enemiesPerWave += 1; // makes game progressively harder
+                }
+                GenerateEnemies(window, content, enemiesPerWave);
             }
 
             return State.Run;
@@ -180,11 +219,12 @@ namespace SpaceShooter
             {
                 e.Draw(_spriteBatch);
             }
-            foreach (GoldCoin gc in goldCoins)
+            foreach (Powerup p in powerups)
             {
-                gc.Draw(_spriteBatch);
+                p.Draw(_spriteBatch);
             }
             _spriteBatch.DrawString(Arial32, "Poäng: " + player.Points, new Microsoft.Xna.Framework.Vector2(0, 0), Color.White);
+            _spriteBatch.DrawString(Arial32, "Liv: " + player.Life, new Microsoft.Xna.Framework.Vector2(0, 30), Color.White);
         }
 
         //HighScoreUpdate - uppdate metod för highscore skärmen
@@ -203,23 +243,39 @@ namespace SpaceShooter
 
             highScore.PrintDraw(spriteBatch, Arial32);
         }
-        public static void GenerateEnemies(GameWindow window, ContentManager content)
+        public static void GenerateEnemies(GameWindow window, ContentManager content, int count)
         {
             Texture2D tmpSprite = content.Load<Texture2D>("mine");
-            for (int i = 0; i < 5; i++)
+
+            if (wave > 1)
             {
-                int rndX = random.Next(0, window.ClientBounds.Width - tmpSprite.Width);
-                int rndY = random.Next(0, window.ClientBounds.Height / 2);
-                Mine temp = new Mine(tmpSprite, rndX, rndY);
-                enemies.Add(temp);
+                for (int i = 0; i < count; i++)
+                {
+                    int rndX = random.Next(0, window.ClientBounds.Width - tmpSprite.Width);
+                    int rndY = random.Next(0, window.ClientBounds.Height / 2);
+                    enemies.Add(new Mine(tmpSprite, rndX, rndY));
+                }
             }
-            tmpSprite = content.Load<Texture2D>("tripod");
-            for (int i = 0; i < 5; i++)
+
+            tmpSprite = content.Load<Texture2D>("astroid");
+
+            for (int i = 0; i < count; i++)
             {
                 int rndX = random.Next(0, window.ClientBounds.Width - tmpSprite.Width);
                 int rndY = random.Next(0, window.ClientBounds.Height / 2);
-                Tripod temp = new Tripod(tmpSprite, rndX, rndY);
-                enemies.Add(temp);
+                enemies.Add(new Astroid(tmpSprite, rndX, rndY));
+            }
+
+            if (wave > 2)
+            {
+                tmpSprite = content.Load<Texture2D>("tripod");
+
+                for (int i = 0; i < count; i++)
+                {
+                    int rndX = random.Next(0, window.ClientBounds.Width - tmpSprite.Width);
+                    int rndY = random.Next(0, window.ClientBounds.Height / 2);
+                    enemies.Add(new Tripod(tmpSprite, rndX, rndY));
+                }
             }
         }
 
@@ -229,10 +285,13 @@ namespace SpaceShooter
 
             player.IsAlive = true;
             player.Points = 0;
+            player.Life = 3;
 
             enemies.Clear();
-            goldCoins.Clear();
-            GenerateEnemies(window, content);
+            powerups.Clear();
+            wave = 1;
+            enemiesPerWave = 4;
+            GenerateEnemies(window, content, enemiesPerWave);
         }
 
         public static void SaveHighScore()

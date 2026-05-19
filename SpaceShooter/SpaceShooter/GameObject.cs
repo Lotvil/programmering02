@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,6 +14,7 @@ namespace SpaceShooter
 {
         protected Texture2D texture;
         protected Microsoft.Xna.Framework.Vector2 vector;
+        protected float rotation;
 
         // Gameobject konstruktor
 
@@ -23,13 +23,14 @@ namespace SpaceShooter
             this.texture = texture;
             this.vector.X = X;
             this.vector.Y = Y;
+            this.rotation = 0f;
         }
 
         // Draw
 
         public virtual void Draw(SpriteBatch _spriteBatch) 
         {
-            _spriteBatch.Draw(texture, vector, Color.White);
+            _spriteBatch.Draw(texture, vector, null, Color.White, rotation, Vector2.Zero, 1f, SpriteEffects.None, 0f);
         }
 
         // Egenskaper
@@ -58,6 +59,8 @@ namespace SpaceShooter
     {
         protected bool isAlive = true;
 
+        protected int life = 1;
+
         // Kontruktor
 
         public physicalObject(Texture2D texture, float X, float Y, float speedX, float speedY) : base(texture, X, Y, speedX, speedY)
@@ -80,7 +83,13 @@ namespace SpaceShooter
         public bool IsAlive
         {
             get { return isAlive; }
-            set {  isAlive = value; }
+            set { isAlive = value; }
+        }
+
+        public int Life
+        {
+            get { return life; }
+            set { life = value; }
         }
 
     }

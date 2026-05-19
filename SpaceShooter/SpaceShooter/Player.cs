@@ -18,12 +18,16 @@ namespace SpaceShooter
         List<Bullet> bullets;
         Texture2D bulletTexture;
         double timeSinceLastBullet = 0; //ms
+        bool bulletBoostActive = false;
+        double bulletBoostStartTime = 0;
+        double bulletBoostDuration = 3000;
 
         //KOnstruktor för spelarobjektet
         public Player(Texture2D texture, float X, float Y, float speedX, float speedY, Texture2D bulletTexture) : base(texture, X, Y, speedX, speedY)
         {
             bullets = new List<Bullet>();
             this.bulletTexture = bulletTexture;
+            life = 3;
         }
         public void Update(GameWindow window, GameTime gameTime)
         {
@@ -74,12 +78,26 @@ namespace SpaceShooter
                 vector.Y = window.ClientBounds.Height - texture.Height;
             }
 
+            if (bulletBoostActive)
+            {
+                if (gameTime.TotalGameTime.TotalMilliseconds > bulletBoostStartTime + bulletBoostDuration)
+                {
+                    bulletBoostActive = false;
+                }
+            }
+            double fireRate = bulletBoostActive ? 100 : 200;
+            float bulletSpeed = bulletBoostActive ? 6f : 3f;
+
+             // Kontrollera om bullet boost-effekten har gått ut
+
             if (keyboardState.IsKeyDown(Keys.Space)) {
                 //Kontrollera om spelaren får skjuta:
-                if (gameTime.TotalGameTime.TotalMilliseconds > timeSinceLastBullet+ 200)
+                if (gameTime.TotalGameTime.TotalMilliseconds > timeSinceLastBullet + fireRate)
                 {
                     //skapa skott
                     Bullet temp = new Bullet(bulletTexture, vector.X + texture.Width / 2 - bulletTexture.Width / 2, vector.Y);
+
+                    temp.SpeedBoost(bulletSpeed);
 
                     //lägg till skott i listan
                     bullets.Add(temp);
@@ -135,12 +153,22 @@ namespace SpaceShooter
             isAlive = true;
         }
 
+        public void BulletBoost(GameTime gameTime)
+        {
+            bulletBoostActive = true;
+            bulletBoostStartTime = gameTime.TotalGameTime.TotalMilliseconds;
+        }
+
     }
     class Bullet : physicalObject
     {
         //konstruktor
         public Bullet(Texture2D texture, float X, float Y) : base(texture, X, Y, 0, 3f)
         {
+        }
+        public void SpeedBoost(float newSpeed)
+        {
+            speed.Y = newSpeed;
         }
         public void Update()
         {
