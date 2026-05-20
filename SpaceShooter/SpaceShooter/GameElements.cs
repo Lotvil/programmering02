@@ -328,6 +328,7 @@ namespace SpaceShooter
             }
             else if (wave == 11)
             {
+                tmpSprite = content.Load<Texture2D>("boss2");
                 enemies.Add(new Boss2(tmpSprite, content.Load<Texture2D>("enemybullet"), window.ClientBounds.Width / 2 - tmpSprite.Width / 2, 0));
                 return;
             }
