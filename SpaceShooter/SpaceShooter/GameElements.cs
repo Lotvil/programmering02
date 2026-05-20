@@ -120,6 +120,7 @@ namespace SpaceShooter
             // Uppdatera spelarens position
             player.Update(window, gameTime);
 
+            // Kolla om det är dags att spawnas fiender som ligger i pendingEnemies
             foreach (PendingEnemy pe in pendingEnemies.ToList())
             {
                 if (gameTime.TotalGameTime.TotalMilliseconds >= pe.SpawnTime)
@@ -459,6 +460,7 @@ namespace SpaceShooter
             highScore.EnterDraw(spriteBatch, Arial32);
         }
 
+        // PendingEnemy - klass för att hålla fiender som ska spawnas efter en viss tid, används för att spawna fiender efter en varning har visats
         class PendingEnemy
         {
             public Enemy Enemy;
@@ -471,6 +473,7 @@ namespace SpaceShooter
             }
         }
 
+        // QueueEnemy - metod för att lägga till en fiende i listan av pendingEnemies
         public static void QueueEnemy(Enemy enemy, GameTime gameTime, double delay)
         {
             pendingEnemies.Add(new PendingEnemy(enemy, gameTime.TotalGameTime.TotalMilliseconds + delay));

@@ -201,6 +201,7 @@ namespace SpaceShooter
         }
     }
 
+    // Klass för varningar som visas innan en fiende spawnas
     class Warning : GameObject
     {
         double timeToDie;
