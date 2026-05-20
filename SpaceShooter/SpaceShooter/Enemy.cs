@@ -11,13 +11,11 @@ namespace SpaceShooter
     // Klass för alla fiender
     abstract class Enemy : physicalObject
     {
-        static double lastEnemySpawnTime = 0;
-        static double waveSpawnInterval = 2000; // Spawnar fiender var 2 sekund i bossvågarna
-        static int spawnLock = 0;
         // Konstruktor för enemy:
         public Enemy(Texture2D texture, float X, float Y, float speedX, float speedY) : base(texture, X, Y, speedX, speedY) 
         { 
         }
+
         // Uppdaterar fiendens position.
         public abstract void Update(GameWindow window, GameTime gameTime);
         // Poäng som spelaren får när den dödar fienden
