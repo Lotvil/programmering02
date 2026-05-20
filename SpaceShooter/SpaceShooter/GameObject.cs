@@ -9,12 +9,11 @@ using System.Threading.Tasks;
 namespace SpaceShooter
 {
 
-    //Gameobject - bas-klass för alla objekt i spelet, har egenskaper som position, textur och rotation, samt en draw-metod
+    //Gameobject - bas-klass för alla objekt i spelet, har egenskaper som position, textur en draw-metod
     class GameObject
 {
         protected Texture2D texture;
         protected Microsoft.Xna.Framework.Vector2 vector;
-        protected float rotation;
 
         // Gameobject konstruktor
         public GameObject(Texture2D texture, float X, float Y) 
@@ -27,7 +26,7 @@ namespace SpaceShooter
         // Draw - ritar ut objektet på skärmen
         public virtual void Draw(SpriteBatch _spriteBatch) 
         {
-            _spriteBatch.Draw(texture, vector, null, Color.White, rotation, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+            _spriteBatch.Draw(texture, vector, null, Color.White);
         }
 
         // Egenskaper

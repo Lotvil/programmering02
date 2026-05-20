@@ -12,7 +12,6 @@ namespace SpaceShooter
     {
         public BackgroundSprite(Texture2D texture, float X, float Y) : base(texture, X, Y)
         {
-
         }
 
         public void Update(GameWindow window, int nrBackgroundsY)
@@ -35,7 +34,7 @@ namespace SpaceShooter
 
         public Background(Texture2D texture, GameWindow window)
         {
-            // Hur många bilden ska vi ha i bredd?
+            // Hur många bilden ska vi ha i bredd och höjd?
             double tmpX = (double)window.ClientBounds.Width / texture.Width;
             nrBackgroundsX = (int)Math.Ceiling(tmpX);
             double tmpY = (double)window.ClientBounds.Height / texture.Height;
