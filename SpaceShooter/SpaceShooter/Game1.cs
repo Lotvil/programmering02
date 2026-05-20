@@ -26,8 +26,6 @@ namespace SpaceShooter
 
         protected override void Initialize()
         {
-            
-
             GameElements.currentState = GameElements.State.Menu;
             GameElements.Initialize();
 
@@ -42,14 +40,16 @@ namespace SpaceShooter
 
         protected override void UnloadContent()
         {
-            GameElements.SaveHighScore();
+            GameElements.SaveHighScore(); // Spara highscore när spelet stängs
         }
 
+        //Spelets huvudloop, där all logik kring states körs
         protected override void Update(GameTime gameTime)
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
                 Exit();
 
+            // Gör så att spelaren kan trycka på escape för att komma tillbaka till menyn när den spelar
             if (Keyboard.GetState().IsKeyDown(Keys.Escape) &&
                 GameElements.currentState == GameElements.State.Run)
             {
@@ -60,22 +60,22 @@ namespace SpaceShooter
 
             switch (GameElements.currentState)
             {
-                case GameElements.State.Run:
+                case GameElements.State.Run: // Kör spelet
                     GameElements.currentState = GameElements.RunUpdate(Content, Window, gameTime);
                     break;
-                case GameElements.State.HighScore:
+                case GameElements.State.HighScore: // Visa highscore
                     GameElements.currentState = GameElements.HighScoreUpdate();
                     break;
-                case GameElements.State.Quit:
+                case GameElements.State.Quit: // Avsluta spelet
                     Exit();
                     break;
-                case GameElements.State.EnterHighScore:
+                case GameElements.State.EnterHighScore: // Mata in namn för highscore
                     GameElements.currentState = GameElements.EnterHighScoreUpdate(gameTime);
                     break;
-                case GameElements.State.om:
+                case GameElements.State.om: // Visa "om spelet"-skärmen
                     GameElements.currentState = GameElements.omUpdate();
                     break;
-                default:
+                default: // Visa menyn
                     GameElements.currentState = GameElements.MenuUpdate(gameTime);
                     break;
             }
@@ -88,6 +88,7 @@ namespace SpaceShooter
             base.Update(gameTime);
         }
 
+        // All lgogik kring att visa de olika skärmarna
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);

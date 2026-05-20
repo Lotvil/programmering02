@@ -8,33 +8,21 @@ using System.Threading.Tasks;
 
 namespace SpaceShooter
 {
-    //Klass för fiender
+    // Klass för alla fiender
     abstract class Enemy : physicalObject
     {
         
-        //Konstruktor för enemy:
-
+        // Konstruktor för enemy:
         public Enemy(Texture2D texture, float X, float Y, float speedX, float speedY) : base(texture, X, Y, speedX, speedY) 
         { 
         }
 
-        //Update(), uppdaterar fiendens position.
-
+        // Uppdaterar fiendens position.
         public abstract void Update(GameWindow window, GameTime gameTime);
+        // Poäng som spelaren får när den dödar fienden
         public virtual int Points => 1;
-
-        protected void FacePlayer()
-        {
-            Player player = GameElements.Player;
-
-            Microsoft.Xna.Framework.Vector2 direction =
-                new Microsoft.Xna.Framework.Vector2(player.X - vector.X, player.Y - vector.Y);
-
-            rotation = (float)Math.Atan2(direction.Y, direction.X) + MathHelper.PiOver2;
-        }
-        
     }
-    // mina som studsar från sida till sida
+    // Fiende som rör sig från sida till sida
     class Mine : Enemy
     {
         public Mine(Texture2D texture, float X, float Y) : base(texture, X, Y, 6f, 0.3f)
@@ -45,10 +33,10 @@ namespace SpaceShooter
 
             if (vector.X > window.ClientBounds.Width - texture.Width || vector.X < 0)
             {
-                speed.X *= -1; // byt riktning
+                speed.X *= -1; // Byter håll
             }
             vector.Y += speed.Y;
-            //dödar fienden när den åker ut nere
+            // Dödar fienden när den åker ut i nederkant
             if (vector.Y > window.ClientBounds.Height)
             {
                 isAlive = false;
@@ -56,16 +44,16 @@ namespace SpaceShooter
         }
     }
 
-    //tripod, elak fiende som kör i full kareta mot dig.
+    // Fiende som faller ner från himlen.
     class Astroid : Enemy
     {
         public Astroid(Texture2D texture, float X, float Y) : base(texture, X, Y, 0f, 0.3f)
         {
-            Life = 2;
+            Life = 2; // Asteroider tar två skott att döda
         }
         public override void Update(GameWindow window, GameTime gameTime) { 
             vector.Y += speed.Y;
-            //dödar fienden när den åker ut nere
+            // Dödar fienden när den åker ut i nederkant
             if (vector.Y > window.ClientBounds.Height)
             {
                 isAlive = false;
@@ -73,11 +61,12 @@ namespace SpaceShooter
         }
     }
 
+    // Fiende som följer efter spelaren
     class Tripod : Enemy
     {
         float chaseSpeed;
 
-        public override int Points => 2;
+        public override int Points => 2; // Tripods är värda mer poäng än vanliga fiender eftersom de är farligare
 
         public Tripod(Texture2D texture, float X, float Y) : base(texture, X, Y, 0f, 0f)
         {
@@ -89,19 +78,17 @@ namespace SpaceShooter
             // Hämta spelaren
             Player player = GameElements.Player;
 
-            // riktning mot spelaren
+            // Riktning mot spelaren
             Microsoft.Xna.Framework.Vector2 direction =
                 new Microsoft.Xna.Framework.Vector2(player.X - vector.X, player.Y - vector.Y);
 
             if (direction != Microsoft.Xna.Framework.Vector2.Zero)
                 direction.Normalize();
 
-            // rör sig mot spelaren
+            // Rör sig mot spelaren
             vector += direction * chaseSpeed;
 
-            //FacePlayer();
-
-            // döda om den åker utanför skärmen
+            // Dödar fienden när den åker ut i nederkant
             if (vector.Y > window.ClientBounds.Height)
             {
                 isAlive = false;
@@ -109,16 +96,17 @@ namespace SpaceShooter
         }
     }
 
+    // Boss klass som skjuter mot spelaren i bursts
     class Boss : Enemy
     {
         double lastBurstTime = 0;
-        public virtual double BurstCooldown => 2000; // time between bursts
+        public virtual double BurstCooldown => 2000; // Tid mellan varje burst i ms
 
         double burstStartTime = 0;
-        public virtual double BurstDuration => 4000;
+        public virtual double BurstDuration => 4000; // Hur länge varje burst varar i ms
 
         double lastShotTime = 0;
-        double fireRate = 150;
+        double fireRate = 150; // Tid mellan varje skott under en burst i ms
 
         bool bursting = false;
 
@@ -170,6 +158,7 @@ namespace SpaceShooter
         }
     }
 
+    // Två olika bossar som ärver från Boss-klassen
     class Boss1 : Boss
     {
         public override int Points => 50;
@@ -192,6 +181,7 @@ namespace SpaceShooter
         }
     }
 
+    // Fiende som skjuter nedåt mot spelaren (bossens skott)
     class EnemyBullet : Enemy
     {
         public override int Points => 0;
@@ -204,7 +194,7 @@ namespace SpaceShooter
         {
             vector.Y += speed.Y;
 
-            // döda om den åker utanför skärmen
+            // Dödar fienden när den åker ut i nederkant
             if (vector.Y > window.ClientBounds.Height)
             {
                 isAlive = false;

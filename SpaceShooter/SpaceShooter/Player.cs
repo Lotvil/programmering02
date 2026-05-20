@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace SpaceShooter
 {
-    // Klassen player är till för att skapa ett spelarobjekt, som hanterar spelarens karaktär och ta emot tangenttryck.
+    // Klass för spelaren, ärver från physicalObject
     class Player : physicalObject
     {
         int points = 0;
@@ -22,7 +22,7 @@ namespace SpaceShooter
         double bulletBoostStartTime = 0;
         double bulletBoostDuration = 3000;
 
-        //KOnstruktor för spelarobjektet
+        // Konstruktor
         public Player(Texture2D texture, float X, float Y, float speedX, float speedY, Texture2D bulletTexture) : base(texture, X, Y, speedX, speedY)
         {
             bullets = new List<Bullet>();
@@ -60,7 +60,7 @@ namespace SpaceShooter
                 }
             }
 
-            // är skeppet utanför fönstret återställs positionen till kanten av fönstret. (skeppet ser bara ut att stanna vid kanten)
+            // Se till att spelaren inte rör sig utanför fönstret
             if (vector.X < 0)
             {
                 vector.X = 0;
@@ -78,42 +78,46 @@ namespace SpaceShooter
                 vector.Y = window.ClientBounds.Height - texture.Height;
             }
 
-            if (bulletBoostActive)
+            if (bulletBoostActive) // Kontrollera om bulletBoost powerupen har gått ut
             {
                 if (gameTime.TotalGameTime.TotalMilliseconds > bulletBoostStartTime + bulletBoostDuration)
                 {
                     bulletBoostActive = false;
                 }
             }
-            double fireRate = bulletBoostActive ? 100 : 200;
+            double fireRate = bulletBoostActive ? 100 : 200; // Aplicera snabbare fire rate och bulletspeed
             float bulletSpeed = bulletBoostActive ? 6f : 3f;
 
-             // Kontrollera om bullet boost-effekten har gått ut
-
-            if (keyboardState.IsKeyDown(Keys.Space)) {
-                //Kontrollera om spelaren får skjuta:
+            // Skjut skott när mellanslag trycks ned
+            if (keyboardState.IsKeyDown(Keys.Space))
+            {
                 if (gameTime.TotalGameTime.TotalMilliseconds > timeSinceLastBullet + fireRate)
                 {
-                    //skapa skott
-                    Bullet temp = new Bullet(bulletTexture, vector.X + texture.Width / 2 - bulletTexture.Width / 2, vector.Y);
+                    float bulletX = vector.X + texture.Width / 2 - bulletTexture.Width / 2;
 
-                    temp.SpeedBoost(bulletSpeed);
+                    // SHIFT = diagonal bullets
+                    if (keyboardState.IsKeyDown(Keys.LeftShift) ||
+                        keyboardState.IsKeyDown(Keys.RightShift))
+                    {
+                        bullets.Add(new Bullet(bulletTexture, bulletX, vector.Y, -0.8f*bulletSpeed, 0.8f*bulletSpeed));
+                        bullets.Add(new Bullet(bulletTexture, bulletX, vector.Y, 0.8f*bulletSpeed, 0.8f*bulletSpeed));
+                    }
+                    else
+                    {
+                        bullets.Add(new Bullet( bulletTexture, bulletX, vector.Y, 0f, bulletSpeed));
+                    }
 
-                    //lägg till skott i listan
-                    bullets.Add(temp);
-
-                    timeSinceLastBullet = gameTime.TotalGameTime.TotalMilliseconds; // Sätt tiden för senaste skottet till nuvarande tid
+                    timeSinceLastBullet = gameTime.TotalGameTime.TotalMilliseconds;
                 }
             }
 
-            //för alla skott
+            // Uppdatera skotten, ta bort skott som inte är levande längre
             foreach (Bullet b in bullets.ToList())
             {
-                b.Update(); //flytta skottet
+                b.Update(window);
 
-                //är skottet dött
                 if (!b.IsAlive) { 
-                    bullets.Remove(b); //tas det bort
+                    bullets.Remove(b);
                 }
             }
 
@@ -124,6 +128,7 @@ namespace SpaceShooter
 
             }
 
+        // Rita ut spelaren och dess skott
         public override void Draw(SpriteBatch _spriteBatch)
         {
             _spriteBatch.Draw(texture, vector, Color.White);
@@ -137,19 +142,16 @@ namespace SpaceShooter
 
         public List<Bullet> Bullets { get { return bullets; } }
 
+        // Metod för att återställa spelarens position, hastighet, skott, poäng och liv
         public void Reset(float X, float Y, float speedX, float speedY)
         {
-            //återställ position och hastighet
             vector.X = X;
             vector.Y = Y;
             speed.X = speedX;
             speed.Y = speedY;
-            //återställ skott
             bullets.Clear();
             timeSinceLastBullet = 0;
-            //återställ poäng
             points = 0;
-            //gör så spelaren lever igen
             isAlive = true;
         }
 
@@ -160,20 +162,22 @@ namespace SpaceShooter
         }
 
     }
+    // Bullet - klass för skotten som spelaren skjuter, ärver från physicalObject
     class Bullet : physicalObject
     {
-        //konstruktor
-        public Bullet(Texture2D texture, float X, float Y) : base(texture, X, Y, 0, 3f)
+        public Bullet(Texture2D texture, float X, float Y, float speedX, float speedY)
+            : base(texture, X, Y, speedX, speedY)
         {
         }
         public void SpeedBoost(float newSpeed)
         {
             speed.Y = newSpeed;
         }
-        public void Update()
+        public void Update(GameWindow window) // Flyttar skottet
         {
+            vector.X += speed.X;
             vector.Y -= speed.Y;
-            if (vector.Y < 0) { 
+            if (vector.Y < 0 || vector.X < 0 || vector.X > window.ClientBounds.Width) { 
                 isAlive = false;
             }
         }

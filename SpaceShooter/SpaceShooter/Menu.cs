@@ -28,20 +28,20 @@ namespace SpaceShooter
         public int CurrentState
         { get { return currentState; } }
     }
-
+    // Menu - klass för att skapa menyer i spelet, har en lista av MenuItems
     class Menu
     {
         List<MenuItem> menu;
         int selected = 0;
 
-        //används för att rita ut menuitems på olika höjd
+        // Används för att rita ut menuitems på olika höjd
         float currentHeight = 0;
 
-        //lastchange gör så man inte kan bläddra i menyerna FÖR snabbt
+        // Lastchange gör så att spelaren inte gör mistag i menyn genom att ha en paus på 130ms
         double lastChange = 0;
 
 
-        //representerar ssjälva menyn
+        // Presenterar Själva menyn
         int defaultMenuState;
 
         //konstruktor
@@ -51,47 +51,44 @@ namespace SpaceShooter
             this.defaultMenuState = defaultMenuState;
         }
 
-        //Lägger till menyval
+        // Lägger till ett menyval
         public void AddItem (Texture2D itemTexture, int state, GameWindow window, ContentManager content)
         {
             Texture2D tmpbox = content.Load<Texture2D>("Menu/start");
             float X = window.ClientBounds.Width /2 - tmpbox.Width/2;
             float Y = 60+currentHeight;
 
-            //ändra currentheight
             currentHeight += itemTexture.Height + 20;
 
-            //skapa temporärt objekt och lägg till i listan
+            // Skapar temp object av MenuItem och lägger till i listan
             MenuItem temp = new MenuItem(itemTexture, new Vector2(X, Y), state);
             menu.Add (temp);
         }
 
         public int Update(GameTime gameTime) 
         {
-            //läs in tangenttryckningar
+            // Läs in tangenttryckningar
             KeyboardState keyboardState = Keyboard.GetState();
 
-            //byte mellan olika menyval med paus på 130 ms mellan varje byte
+            // Byte mellan olika menyval med paus på 130 ms mellan varje byte
             if (lastChange + 130 < gameTime.TotalGameTime.TotalMilliseconds)
             {
-                //Gå ett steg ner.
+                // Gå ett steg ner i menyn.
                 if (keyboardState.IsKeyDown(Keys.Down) || keyboardState.IsKeyDown(Keys.S))
                 {
                     selected++;
-                    //se till att valen loopas
                     if (selected > menu.Count - 1)
                     {
                         selected = 0;
                     }
                 }
-                //Gå upp ett steg
+                // Gå upp ett steg
                 if (keyboardState.IsKeyDown(Keys.Up) || keyboardState.IsKeyDown(Keys.W))
                 {
                     selected--;
-                    //se till att valen loopas
                     if(selected < 0)
                     {
-                        selected = menu.Count - 1; // det sista menyvalet.
+                        selected = menu.Count - 1; // Om man går upp från det första valet så hamnar man på det sista valet
                     }
                 }
 
@@ -107,17 +104,18 @@ namespace SpaceShooter
             
         }
 
+        // Draw - ritar ut menyn, det aktiva valet ritas ut med en annan ton
         public void Draw (SpriteBatch _spriteBatch)
         {
             for (int i=0; i<menu.Count; i++)
             {
-                //det aktiva valet ritas ut med speciall toning
+                // Det aktiva valet ritas ut med annan ton
                 if (i == selected)
                 {
                     _spriteBatch.Draw(menu[i].Texture, menu[i].Position, Color.LightYellow);
                 }
 
-                //annars ritas det utan toning
+                // De andra valen ritas ut i normal ton
                 else
                 {
                     _spriteBatch.Draw(menu[i].Texture, menu[i].Position, Color.White);

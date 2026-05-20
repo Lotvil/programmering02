@@ -14,7 +14,8 @@ using System.IO;
 namespace SpaceShooter
 {
     static class GameElements
-{
+{       
+        // Alla element till spellogiken
         static Texture2D menuSprite;
         static Microsoft.Xna.Framework.Vector2 menuPos;
         static Player player;
@@ -33,11 +34,11 @@ namespace SpaceShooter
         static ContentManager gameContent;
         static Random random = new Random();
         static bool ignoreInput = false;
-        static int wave = 5;
+        static int wave = 0;
         static int enemiesPerWave = 4;
         
 
-        //olika gamestates
+        // Gamestates
         public enum State
         {
             Menu,
@@ -49,25 +50,22 @@ namespace SpaceShooter
         };
         public static State currentState;
 
-        //Initialize - ropas upp av game1.initilize då spelet startar.
-
+        // Initialize - ropas upp av game1.initilize då spelet startar.
         public static void Initialize() { 
             powerups = new List<Powerup>();
             highScore = new HighScore(10);
         }
 
         // LoadContent - anropas av game1.loadcontent när spelet startar
-
         public static void LoadContent(ContentManager content, GameWindow window) {
             menuSprite = content.Load<Texture2D>("menu");
             menuPos.X = window.ClientBounds.Width / 2 - menuSprite.Width / 2;
             menuPos.Y = window.ClientBounds.Height / 2 - menuSprite.Height / 2;
 
+            // Laddar in texturer till spelaren, powerups, bakgrund och meny samt highscore från fil
             player = new Player(content.Load<Texture2D>("ship"), 380, 400, 2.5f, 4.5f, content.Load<Texture2D>("bullet"));
 
             enemies = new List<Enemy>();
-            //wave = 1;
-            //GenerateEnemies(window, content, enemiesPerWave);
 
             Arial32 = content.Load<SpriteFont>("Fonts/Arial32");
             goldCoinSprite = content.Load<Texture2D>("coin");
@@ -93,7 +91,7 @@ namespace SpaceShooter
             {
                 if (Keyboard.GetState().IsKeyUp(Keys.Enter))
                 {
-                    ignoreInput = false; // unlock input once key is released
+                    ignoreInput = false; // Förhindra att val görs av misstag direkt när menyn visas
                 }
                 return State.Menu;
             }
@@ -112,19 +110,19 @@ namespace SpaceShooter
 
             background.Update(window);
 
-            //uppdatera spelaren position
+            // Uppdatera spelarens position
             player.Update(window, gameTime);
 
-            //gå igenomalla fiender
+            // Loopa genom alla fiender och kolla kollison med kulor och spelare, samt uppdatera deras position
             foreach (Enemy e in enemies.ToList())
             {
-                //kontrollera om den nuddar en kula
+                // Kontrollerar kollison mellan fiende och kulor
                 foreach (Bullet b in player.Bullets)
                 {
-                    if (e.CheckCollision(b)) // vid kollisoin
+                    if (e.CheckCollision(b)) // Vid kollison
                     {
                         e.Life -= 1;
-                        b.IsAlive = false; //ta bort kulan
+                        b.IsAlive = false; // Ta bort kulan
 
                         if (e.Life <= 0)
                         {
@@ -139,9 +137,9 @@ namespace SpaceShooter
                     {
                         player.Life -= 1;
 
-                        e.IsAlive = false; // instantly kill enemy on contact
+                        e.IsAlive = false; // Ta bort fienden vid kollison med spelaren
 
-                        if (player.Life <= 0)
+                        if (player.Life <= 0) // Dödar spelaren när liven tar slut
                         {
                             player.IsAlive = false;
                         }
@@ -154,57 +152,57 @@ namespace SpaceShooter
                 }
 
             }
-            int newPowerup = random.Next(0, 600);
-            if (0 < newPowerup && newPowerup < 3)
+            int newPowerup = random.Next(0, 600); // Spawnar powerups
+            if (0 < newPowerup && newPowerup < 3) // 0.3% chans varje frame att en GoldCoin ska spawnas
             {
                 int rndX = random.Next(0, window.ClientBounds.Width - goldCoinSprite.Width);
                 int rndY = random.Next(0, window.ClientBounds.Height - goldCoinSprite.Height);
                 powerups.Add(new GoldCoin(goldCoinSprite, rndX, rndY, gameTime));
             }
-            if (newPowerup == 3)
+            if (newPowerup == 3) // 0.15% chans varje frame att en BulletBoost ska spawnas
             {
                 int rndX = random.Next(0, window.ClientBounds.Width - bulletBoostSprite.Width);
                 int rndY = random.Next(0, window.ClientBounds.Height - bulletBoostSprite.Height);
                 powerups.Add(new BulletBoost(bulletBoostSprite, rndX, rndY, gameTime));
             }
-            if (newPowerup == 4 && player.Life < 3 && wave > 2)
-            {
+            if (newPowerup == 4 && player.Life < 3 && wave > 2) // 0.15% chans varje frame att en Heart ska spawnas 
+            {//                                                    om spelaren har mindre än 3 liv och våg 3 har passerats.
                 int rndX = random.Next(0, window.ClientBounds.Width - heartSprite.Width);
                 int rndY = random.Next(0, window.ClientBounds.Height - heartSprite.Height);
                 powerups.Add(new Heart(heartSprite, rndX, rndY, gameTime));
             }
 
-            //Gå igenom listan med mynt ute
+            // Gå igenom listan powerups och kolla om spelaren plockar upp någon
             foreach (Powerup p in powerups.ToList())
             {
                 if (p.IsAlive)
                 {
-                    //kollar om myntet dött än
+                    // Kollar om powerupens tid tagit slut
                     p.Update(gameTime);
 
-                    //kollar om det nuddar spelaren
+                    // Kollar om powerupen nuddar spelaren
                     if (p.CheckCollision(player))
                     {
-                        //ta bort myntet
+                        // Ta bort powerup och ge spelaren poäng och effekt
                         powerups.Remove(p);
-                        player.Points += p.Points; // ge spelaren poäng
-                        if (p is BulletBoost)
+                        player.Points += p.Points; // Ge spelaren poäng
+                        if (p is BulletBoost) //Bulletboost ger snabbare eldhastighet
                         {
                             player.BulletBoost(gameTime);
                         }
-                        if (p is Heart)
+                        if (p is Heart) // Heart ger spelaren ett extra liv
                         {
                             player.Life += 1;
                         }
                     }
                 }
                 else
-                { //ta bort guldmyntet då det dött.
+                { // Ta bort powerupen då den dött.
                     powerups.Remove(p);
                 }
             }
 
-            if (wave == 6 || wave == 11)
+            if (wave == 6 || wave == 11) //Spawnar fiender under bossvågarna
             {
                 int enemySpawn = random.Next(0, 500);
 
@@ -228,7 +226,7 @@ namespace SpaceShooter
                 }
             }
 
-            if (!player.IsAlive)
+            if (!player.IsAlive) //Tar spelaren till Highscore-inmatnings-sidan när den dör
             {
                 return State.EnterHighScore;
             }
@@ -238,7 +236,7 @@ namespace SpaceShooter
                 wave++;
                 if (wave > 3)
                 {
-                    enemiesPerWave += 1; // makes game progressively harder
+                    enemiesPerWave += 1; // Makes game progressively harder
                 }
                 GenerateEnemies(window, content, enemiesPerWave);
             }
@@ -250,17 +248,18 @@ namespace SpaceShooter
         //RunDraw - metod för att rita ut spelet
         public static void RunDraw(SpriteBatch _spriteBatch) {
 
-            background.Draw(_spriteBatch);
+            background.Draw(_spriteBatch); //Rita bakgrunden först så den hamnar längst bak
 
-            player.Draw(_spriteBatch);
-            foreach (Enemy e in enemies)
+            player.Draw(_spriteBatch); // Rita spelaren ovanpå bakgrunden
+            foreach (Enemy e in enemies) // Rita fiender
             {
                 e.Draw(_spriteBatch);
             }
-            foreach (Powerup p in powerups)
+            foreach (Powerup p in powerups) // Rita powerups
             {
                 p.Draw(_spriteBatch);
             }
+            // Rita poäng och liv
             _spriteBatch.DrawString(Arial32, "Poäng: " + player.Points, new Microsoft.Xna.Framework.Vector2(0, 0), Color.White);
             _spriteBatch.DrawString(Arial32, "Liv: " + player.Life, new Microsoft.Xna.Framework.Vector2(0, 30), Color.White);
         }
@@ -283,6 +282,7 @@ namespace SpaceShooter
             highScore.PrintDraw(spriteBatch, Arial32);
         }
 
+        // OmUpdate och OmDraw - uppdate och draw metoder för "om spelet"-skärmen
         public static State omUpdate()
         {
             KeyboardState keyboardState = Keyboard.GetState();
@@ -303,7 +303,7 @@ namespace SpaceShooter
                 "Tack för att du spelar mitt spel!\n\n" +
                 "Kontroller:\n" +
                 "Flytta: WASD eller piltangenter\n" +
-                "Skjut: mellanslag\n" +
+                "Skjut: mellanslag (SHIFT för diagonala skott)\n" +
                 "Pausa: Escape\n\n" +
                 "Målet är att överleva så länge som möjligt och få så många poäng\n" +
                 "som möjligt genom att skjuta fiender och samla powerups.";
@@ -315,10 +315,12 @@ namespace SpaceShooter
             spriteBatch.Draw(heartSprite, new Microsoft.Xna.Framework.Vector2(150, 420), Color.White);
             
         }
+        // GenerateEnemies - metod för att generera fiender, anropas i början av varje våg
         public static void GenerateEnemies(GameWindow window, ContentManager content, int count)
         {
             Texture2D tmpSprite = content.Load<Texture2D>("boss");
             
+            // Spawnar bossar på våg 6 och 11, spawnar då inte vanliga fiender i början av vågen
             if (wave == 6)
             {
                 enemies.Add(new Boss1(tmpSprite, content.Load<Texture2D>("enemybullet"), window.ClientBounds.Width / 2 - tmpSprite.Width / 2, 0));
@@ -331,11 +333,13 @@ namespace SpaceShooter
             }
             else
             {
+
+                // Spawnar vanliga fiender, antalet fiender som spawnas ökar ju högre våg
                 tmpSprite = content.Load<Texture2D>("mine");
 
                 if (wave > 1)
                 {
-                    for (int i = 0; i < count; i++)
+                    for (int i = 0; i < count; i++) // Spawnar mines i våg 2 och uppåt
                     {
                         int rndX = random.Next(0, window.ClientBounds.Width - tmpSprite.Width);
                         int rndY = random.Next(0, window.ClientBounds.Height / 2);
@@ -345,7 +349,7 @@ namespace SpaceShooter
 
                 tmpSprite = content.Load<Texture2D>("astroid");
 
-                for (int i = 0; i < count; i++)
+                for (int i = 0; i < count; i++) // Spawnar asteroider i alla vågor
                 {
                     int rndX = random.Next(0, window.ClientBounds.Width - tmpSprite.Width);
                     int rndY = random.Next(0, window.ClientBounds.Height / 2);
@@ -356,7 +360,7 @@ namespace SpaceShooter
                 {
                     tmpSprite = content.Load<Texture2D>("tripod");
 
-                    for (int i = 0; i < count; i++)
+                    for (int i = 0; i < count; i++) // Spawnar tripods i våg 3 och uppåt
                     {
                         int rndX = random.Next(0, window.ClientBounds.Width - tmpSprite.Width);
                         int rndY = random.Next(0, window.ClientBounds.Height / 2);
@@ -366,6 +370,7 @@ namespace SpaceShooter
             }
         }
 
+        // Reset - metod för att starta om spelet, anropas när spelaren dör och efter att highscore matats in
         public static void Reset (GameWindow window, ContentManager content)
         {
             player.Reset(380, 400, 2.5f, 4.5f);
@@ -381,11 +386,13 @@ namespace SpaceShooter
             GenerateEnemies(window, content, enemiesPerWave);
         }
 
+        // SaveHighScore - metod för att spara highscore till fil, anropas när highscore matats in
         public static void SaveHighScore()
         {
             highScore.SaveToFile("highscore.txt");
         }
 
+        // EnterHighScoreUpdate - uppdate metod för highscore-inmatnings-sidan
         public static State EnterHighScoreUpdate(GameTime gameTime)
         {
             if (highScore.EnterUpdate(gameTime, player.Points))
@@ -402,6 +409,7 @@ namespace SpaceShooter
             return State.EnterHighScore;
         }
 
+        // EnterHighScoreDraw - draw metod för highscore-inmatnings-sidan
         public static void EnterHighScoreDraw(SpriteBatch spriteBatch)
         {
             background.Draw(spriteBatch);
