@@ -147,7 +147,7 @@ class HighScore
 		foreach(HSItem h in highscore)
 			text += h.Name + " " + h.Points + "\n";
 
-		spriteBatch.DrawString(font, text, Vector2.Zero, Color.White);
+		spriteBatch.DrawString(font, text, new Microsoft.Xna.Framework.Vector2(50, 50), Color.White);
 	}
 
 	// =======================================================================

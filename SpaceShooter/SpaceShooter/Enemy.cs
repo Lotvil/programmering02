@@ -112,10 +112,10 @@ namespace SpaceShooter
     class Boss : Enemy
     {
         double lastBurstTime = 0;
-        double burstCooldown = 2000; // time between bursts
+        public virtual double BurstCooldown => 2000; // time between bursts
 
         double burstStartTime = 0;
-        double burstDuration = 4000;
+        public virtual double BurstDuration => 4000;
 
         double lastShotTime = 0;
         double fireRate = 150;
@@ -126,11 +126,9 @@ namespace SpaceShooter
         int rndX = 0;
 
         Texture2D bulletTexture;
-        public override int Points => 50;
 
         public Boss(Texture2D texture, Texture2D bulletTexture, float X, float Y) : base(texture, X, Y, 0f, 0f)
         {
-            Life = 70;
             this.bulletTexture = bulletTexture;
         }
 
@@ -139,7 +137,7 @@ namespace SpaceShooter
             double time = gameTime.TotalGameTime.TotalMilliseconds;
 
             // start burst
-            if (!bursting && time > lastBurstTime + burstCooldown)
+            if (!bursting && time > lastBurstTime + BurstCooldown)
             {
                 bursting = true;
                 burstStartTime = time;
@@ -151,7 +149,7 @@ namespace SpaceShooter
             }
 
             // stop burst
-            if (bursting && time > burstStartTime + burstDuration)
+            if (bursting && time > burstStartTime + BurstDuration)
             {
                 bursting = false;
             }
@@ -172,10 +170,32 @@ namespace SpaceShooter
         }
     }
 
+    class Boss1 : Boss
+    {
+        public override int Points => 50;
+
+        public Boss1(Texture2D texture, Texture2D bulletTexture, float X, float Y) : base(texture, bulletTexture, X, Y)
+        {
+            Life = 70;
+        }
+    }
+
+    class Boss2 : Boss
+    {
+        public override double BurstCooldown => 0;
+        public override double BurstDuration => 2000;
+        public override int Points => 100;
+
+        public Boss2(Texture2D texture, Texture2D bulletTexture, float X, float Y) : base(texture, bulletTexture, X, Y)
+        {
+            Life = 150;
+        }
+    }
+
     class EnemyBullet : Enemy
     {
         public override int Points => 0;
-        public EnemyBullet(Texture2D texture, float X, float Y) : base(texture, X, Y, 0f, 6f)
+        public EnemyBullet(Texture2D texture, float X, float Y) : base(texture, X, Y, 0f, 7f)
         {
             Life = 100;
         }

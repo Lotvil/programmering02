@@ -72,6 +72,9 @@ namespace SpaceShooter
                 case GameElements.State.EnterHighScore:
                     GameElements.currentState = GameElements.EnterHighScoreUpdate(gameTime);
                     break;
+                case GameElements.State.om:
+                    GameElements.currentState = GameElements.omUpdate();
+                    break;
                 default:
                     GameElements.currentState = GameElements.MenuUpdate(gameTime);
                     break;
@@ -101,6 +104,9 @@ namespace SpaceShooter
                     break;
                 case GameElements.State.EnterHighScore:
                     GameElements.EnterHighScoreDraw(_spriteBatch);
+                    break;
+                case GameElements.State.om:
+                    GameElements.omDraw(_spriteBatch);
                     break;
                 default:
                     GameElements.MenuDraw(_spriteBatch);

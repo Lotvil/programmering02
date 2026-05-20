@@ -72,7 +72,7 @@ namespace SpaceShooter
             KeyboardState keyboardState = Keyboard.GetState();
 
             //byte mellan olika menyval med paus på 130 ms mellan varje byte
-            if (lastChange + 300 < gameTime.TotalGameTime.TotalMilliseconds)
+            if (lastChange + 130 < gameTime.TotalGameTime.TotalMilliseconds)
             {
                 //Gå ett steg ner.
                 if (keyboardState.IsKeyDown(Keys.Down) || keyboardState.IsKeyDown(Keys.S))

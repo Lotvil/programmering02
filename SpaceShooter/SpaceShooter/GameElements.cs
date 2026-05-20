@@ -33,7 +33,7 @@ namespace SpaceShooter
         static ContentManager gameContent;
         static Random random = new Random();
         static bool ignoreInput = false;
-        static int wave = 0;
+        static int wave = 5;
         static int enemiesPerWave = 4;
         
 
@@ -42,6 +42,7 @@ namespace SpaceShooter
         {
             Menu,
             Run,
+            om,
             EnterHighScore,
             HighScore,
             Quit
@@ -76,6 +77,7 @@ namespace SpaceShooter
             menu.AddItem(content.Load<Texture2D>("Menu/start"), (int)State.Run, window, content);
             menu.AddItem(content.Load<Texture2D>("Menu/highscore"), (int)State.HighScore, window, content);
             menu.AddItem(content.Load<Texture2D>("Menu/exit"), (int)State.Quit, window, content);
+            menu.AddItem(content.Load<Texture2D>("omspelet"), (int)State.om, window, content);
 
             background = new Background(content.Load<Texture2D>("background"), window);
 
@@ -202,11 +204,11 @@ namespace SpaceShooter
                 }
             }
 
-            if (wave == 6)
+            if (wave == 6 || wave == 11)
             {
-                int enemySpawn = random.Next(0, 300);
+                int enemySpawn = random.Next(0, 500);
 
-                if (enemySpawn == 1)
+                if (enemySpawn > 3 && wave > enemySpawn)
                 {
                     Texture2D mineTexture = content.Load<Texture2D>("mine");
 
@@ -216,7 +218,7 @@ namespace SpaceShooter
                     enemies.Add(new Mine(mineTexture, rndX, 0));
                 }
 
-                if (enemySpawn == 2)
+                if ( enemySpawn > 3+10 && wave+10 > enemySpawn)
                 {
                     Texture2D tripodTexture = content.Load<Texture2D>("tripod");
 
@@ -266,7 +268,8 @@ namespace SpaceShooter
         //HighScoreUpdate - uppdate metod för highscore skärmen
         public static State HighScoreUpdate() {
             KeyboardState keyboardState = Keyboard.GetState();
-            if (keyboardState.IsKeyDown(Keys.Escape)) { 
+            if (keyboardState.IsKeyDown(Keys.Escape)) 
+            { 
                 return State.Menu;
             }
             return State.HighScore;
@@ -279,13 +282,51 @@ namespace SpaceShooter
 
             highScore.PrintDraw(spriteBatch, Arial32);
         }
+
+        public static State omUpdate()
+        {
+            KeyboardState keyboardState = Keyboard.GetState();
+            if (keyboardState.IsKeyDown(Keys.Escape))
+            {
+                return State.Menu;
+            }
+            return State.om;
+        }
+
+        public static void omDraw(SpriteBatch spriteBatch)
+        {
+            background.Draw(spriteBatch);
+
+            string text = "Detta spel är skapat av:\n\n" +
+                "Leonid Bilhöfer Maksinen\n" +
+                "Med stor inspiration från SpaceShooter av Krister Trangius\n\n" +
+                "Tack för att du spelar mitt spel!\n\n" +
+                "Kontroller:\n" +
+                "Flytta: WASD eller piltangenter\n" +
+                "Skjut: mellanslag\n" +
+                "Pausa: Escape\n\n" +
+                "Målet är att överleva så länge som möjligt och få så många poäng\n" +
+                "som möjligt genom att skjuta fiender och samla powerups.";
+
+            spriteBatch.DrawString(Arial32, text, new Microsoft.Xna.Framework.Vector2(50, 10), Color.White);
+
+            spriteBatch.Draw(goldCoinSprite, new Microsoft.Xna.Framework.Vector2(50, 420), Color.White);
+            spriteBatch.Draw(bulletBoostSprite, new Microsoft.Xna.Framework.Vector2(100, 420), Color.White);
+            spriteBatch.Draw(heartSprite, new Microsoft.Xna.Framework.Vector2(150, 420), Color.White);
+            
+        }
         public static void GenerateEnemies(GameWindow window, ContentManager content, int count)
         {
             Texture2D tmpSprite = content.Load<Texture2D>("boss");
             
             if (wave == 6)
             {
-                enemies.Add(new Boss(tmpSprite, content.Load<Texture2D>("enemybullet"), window.ClientBounds.Width / 2 - tmpSprite.Width / 2, 0));
+                enemies.Add(new Boss1(tmpSprite, content.Load<Texture2D>("enemybullet"), window.ClientBounds.Width / 2 - tmpSprite.Width / 2, 0));
+                return;
+            }
+            else if (wave == 11)
+            {
+                enemies.Add(new Boss2(tmpSprite, content.Load<Texture2D>("enemybullet"), window.ClientBounds.Width / 2 - tmpSprite.Width / 2, 0));
                 return;
             }
             else
