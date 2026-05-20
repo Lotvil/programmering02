@@ -20,9 +20,11 @@ namespace SpaceShooter
         static Player player;
         public static Player Player => player;
         static List<Enemy> enemies;
+        public static List<Enemy> Enemies => enemies;
         static List<Powerup> powerups;
         static Texture2D goldCoinSprite;
         static Texture2D bulletBoostSprite;
+        static Texture2D heartSprite;
         static SpriteFont Arial32;
         static Menu menu;
         static Background background;
@@ -69,7 +71,7 @@ namespace SpaceShooter
             Arial32 = content.Load<SpriteFont>("Fonts/Arial32");
             goldCoinSprite = content.Load<Texture2D>("coin");
             bulletBoostSprite = content.Load<Texture2D>("bulletboost");
-
+            heartSprite = content.Load<Texture2D>("heart");
             menu = new Menu((int)State.Menu);
             menu.AddItem(content.Load<Texture2D>("Menu/start"), (int)State.Run, window, content);
             menu.AddItem(content.Load<Texture2D>("Menu/highscore"), (int)State.HighScore, window, content);
@@ -142,7 +144,7 @@ namespace SpaceShooter
                             player.IsAlive = false;
                         }
                     }
-                    e.Update(window);
+                    e.Update(window, gameTime);
                 }
                 else
                 {
@@ -150,18 +152,24 @@ namespace SpaceShooter
                 }
 
             }
-            int newPowerup = random.Next(0, 400);
-            if (1 < newPowerup && newPowerup < 4)
+            int newPowerup = random.Next(0, 600);
+            if (0 < newPowerup && newPowerup < 3)
             {
                 int rndX = random.Next(0, window.ClientBounds.Width - goldCoinSprite.Width);
                 int rndY = random.Next(0, window.ClientBounds.Height - goldCoinSprite.Height);
                 powerups.Add(new GoldCoin(goldCoinSprite, rndX, rndY, gameTime));
             }
-            if (newPowerup == 0)
+            if (newPowerup == 3)
             {
                 int rndX = random.Next(0, window.ClientBounds.Width - bulletBoostSprite.Width);
                 int rndY = random.Next(0, window.ClientBounds.Height - bulletBoostSprite.Height);
                 powerups.Add(new BulletBoost(bulletBoostSprite, rndX, rndY, gameTime));
+            }
+            if (newPowerup == 4 && player.Life < 3 && wave > 2)
+            {
+                int rndX = random.Next(0, window.ClientBounds.Width - heartSprite.Width);
+                int rndY = random.Next(0, window.ClientBounds.Height - heartSprite.Height);
+                powerups.Add(new Heart(heartSprite, rndX, rndY, gameTime));
             }
 
             //Gå igenom listan med mynt ute
@@ -182,11 +190,39 @@ namespace SpaceShooter
                         {
                             player.BulletBoost(gameTime);
                         }
+                        if (p is Heart)
+                        {
+                            player.Life += 1;
+                        }
                     }
                 }
                 else
                 { //ta bort guldmyntet då det dött.
                     powerups.Remove(p);
+                }
+            }
+
+            if (wave == 6)
+            {
+                int enemySpawn = random.Next(0, 300);
+
+                if (enemySpawn == 1)
+                {
+                    Texture2D mineTexture = content.Load<Texture2D>("mine");
+
+                    int rndX = random.Next(0, window.ClientBounds.Width - mineTexture.Width);
+                    int rndY = random.Next(0, window.ClientBounds.Height / 2);
+
+                    enemies.Add(new Mine(mineTexture, rndX, 0));
+                }
+
+                if (enemySpawn == 2)
+                {
+                    Texture2D tripodTexture = content.Load<Texture2D>("tripod");
+
+                    int rndX = random.Next(0, window.ClientBounds.Width - tripodTexture.Width);
+
+                    enemies.Add(new Tripod(tripodTexture, rndX, 0));
                 }
             }
 
@@ -245,36 +281,46 @@ namespace SpaceShooter
         }
         public static void GenerateEnemies(GameWindow window, ContentManager content, int count)
         {
-            Texture2D tmpSprite = content.Load<Texture2D>("mine");
-
-            if (wave > 1)
+            Texture2D tmpSprite = content.Load<Texture2D>("boss");
+            
+            if (wave == 6)
             {
-                for (int i = 0; i < count; i++)
+                enemies.Add(new Boss(tmpSprite, content.Load<Texture2D>("enemybullet"), window.ClientBounds.Width / 2 - tmpSprite.Width / 2, 0));
+                return;
+            }
+            else
+            {
+                tmpSprite = content.Load<Texture2D>("mine");
+
+                if (wave > 1)
                 {
-                    int rndX = random.Next(0, window.ClientBounds.Width - tmpSprite.Width);
-                    int rndY = random.Next(0, window.ClientBounds.Height / 2);
-                    enemies.Add(new Mine(tmpSprite, rndX, rndY));
+                    for (int i = 0; i < count; i++)
+                    {
+                        int rndX = random.Next(0, window.ClientBounds.Width - tmpSprite.Width);
+                        int rndY = random.Next(0, window.ClientBounds.Height / 2);
+                        enemies.Add(new Mine(tmpSprite, rndX, rndY));
+                    }
                 }
-            }
 
-            tmpSprite = content.Load<Texture2D>("astroid");
-
-            for (int i = 0; i < count; i++)
-            {
-                int rndX = random.Next(0, window.ClientBounds.Width - tmpSprite.Width);
-                int rndY = random.Next(0, window.ClientBounds.Height / 2);
-                enemies.Add(new Astroid(tmpSprite, rndX, rndY));
-            }
-
-            if (wave > 2)
-            {
-                tmpSprite = content.Load<Texture2D>("tripod");
+                tmpSprite = content.Load<Texture2D>("astroid");
 
                 for (int i = 0; i < count; i++)
                 {
                     int rndX = random.Next(0, window.ClientBounds.Width - tmpSprite.Width);
                     int rndY = random.Next(0, window.ClientBounds.Height / 2);
-                    enemies.Add(new Tripod(tmpSprite, rndX, rndY));
+                    enemies.Add(new Astroid(tmpSprite, rndX, rndY));
+                }
+
+                if (wave > 2)
+                {
+                    tmpSprite = content.Load<Texture2D>("tripod");
+
+                    for (int i = 0; i < count; i++)
+                    {
+                        int rndX = random.Next(0, window.ClientBounds.Width - tmpSprite.Width);
+                        int rndY = random.Next(0, window.ClientBounds.Height / 2);
+                        enemies.Add(new Tripod(tmpSprite, rndX, rndY));
+                    }
                 }
             }
         }

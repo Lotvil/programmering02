@@ -47,4 +47,12 @@ namespace SpaceShooter
         {
         }
     }
+
+    class Heart : Powerup
+    {
+        public override int Points => 3;
+        public Heart(Texture2D texture, float X, float Y, GameTime gameTime) : base(texture, X, Y, gameTime)
+        {
+        }
+    }
 }

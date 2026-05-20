@@ -14,13 +14,13 @@ namespace SpaceShooter
         
         //Konstruktor för enemy:
 
-        public Enemy(Texture2D texture, float X, float Y, float speedX, float speedY) : base(texture, X, Y, 6f, 0.3f) 
+        public Enemy(Texture2D texture, float X, float Y, float speedX, float speedY) : base(texture, X, Y, speedX, speedY) 
         { 
         }
 
         //Update(), uppdaterar fiendens position.
 
-        public abstract void Update(GameWindow window);
+        public abstract void Update(GameWindow window, GameTime gameTime);
         public virtual int Points => 1;
 
         protected void FacePlayer()
@@ -40,7 +40,7 @@ namespace SpaceShooter
         public Mine(Texture2D texture, float X, float Y) : base(texture, X, Y, 6f, 0.3f)
         {
         }
-        public override void Update(GameWindow window) {
+        public override void Update(GameWindow window, GameTime gameTime) {
             vector.X += speed.X;
 
             if (vector.X > window.ClientBounds.Width - texture.Width || vector.X < 0)
@@ -59,11 +59,11 @@ namespace SpaceShooter
     //tripod, elak fiende som kör i full kareta mot dig.
     class Astroid : Enemy
     {
-        public Astroid(Texture2D texture, float X, float Y) : base(texture, X, Y, 0f, 3f)
+        public Astroid(Texture2D texture, float X, float Y) : base(texture, X, Y, 0f, 0.3f)
         {
             Life = 2;
         }
-        public override void Update(GameWindow window) { 
+        public override void Update(GameWindow window, GameTime gameTime) { 
             vector.Y += speed.Y;
             //dödar fienden när den åker ut nere
             if (vector.Y > window.ClientBounds.Height)
@@ -79,12 +79,12 @@ namespace SpaceShooter
 
         public override int Points => 2;
 
-        public Tripod(Texture2D texture, float X, float Y) : base(texture, X, Y, 0f, 3f)
+        public Tripod(Texture2D texture, float X, float Y) : base(texture, X, Y, 0f, 0f)
         {
             chaseSpeed = 1.1f;
         }
 
-        public override void Update(GameWindow window)
+        public override void Update(GameWindow window, GameTime gameTime)
         {
             // Hämta spelaren
             Player player = GameElements.Player;
@@ -102,9 +102,90 @@ namespace SpaceShooter
             //FacePlayer();
 
             // döda om den åker utanför skärmen
-            if (vector.Y > window.ClientBounds.Height ||
-                vector.X < -texture.Width ||
-                vector.X > window.ClientBounds.Width)
+            if (vector.Y > window.ClientBounds.Height)
+            {
+                isAlive = false;
+            }
+        }
+    }
+
+    class Boss : Enemy
+    {
+        double lastBurstTime = 0;
+        double burstCooldown = 2000; // time between bursts
+
+        double burstStartTime = 0;
+        double burstDuration = 4000;
+
+        double lastShotTime = 0;
+        double fireRate = 150;
+
+        bool bursting = false;
+
+        Random random = new Random();
+        int rndX = 0;
+
+        Texture2D bulletTexture;
+        public override int Points => 50;
+
+        public Boss(Texture2D texture, Texture2D bulletTexture, float X, float Y) : base(texture, X, Y, 0f, 0f)
+        {
+            Life = 70;
+            this.bulletTexture = bulletTexture;
+        }
+
+        public override void Update(GameWindow window, GameTime gameTime)
+        {
+            double time = gameTime.TotalGameTime.TotalMilliseconds;
+
+            // start burst
+            if (!bursting && time > lastBurstTime + burstCooldown)
+            {
+                bursting = true;
+                burstStartTime = time;
+                lastBurstTime = time;
+                rndX = random.Next(
+                    (int)vector.X,
+                    (int)(vector.X + texture.Width)
+                );
+            }
+
+            // stop burst
+            if (bursting && time > burstStartTime + burstDuration)
+            {
+                bursting = false;
+            }
+
+            // fire bullets during burst
+            if (bursting && time > lastShotTime + fireRate)
+            {
+                GameElements.Enemies.Add(
+                    new EnemyBullet(
+                        bulletTexture,
+                        rndX,
+                        vector.Y + texture.Height
+                    )
+                );
+
+                lastShotTime = time;
+            }
+        }
+    }
+
+    class EnemyBullet : Enemy
+    {
+        public override int Points => 0;
+        public EnemyBullet(Texture2D texture, float X, float Y) : base(texture, X, Y, 0f, 6f)
+        {
+            Life = 100;
+        }
+
+        public override void Update(GameWindow window, GameTime gameTime)
+        {
+            vector.Y += speed.Y;
+
+            // döda om den åker utanför skärmen
+            if (vector.Y > window.ClientBounds.Height)
             {
                 isAlive = false;
             }
