@@ -10,6 +10,7 @@ using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.ComponentModel;
 
 namespace SpaceShooter
 {
@@ -26,6 +27,10 @@ namespace SpaceShooter
         static Texture2D goldCoinSprite;
         static Texture2D bulletBoostSprite;
         static Texture2D heartSprite;
+        static List<Warning> warnings;
+        static Texture2D warningSprite;
+        static List<PendingEnemy> pendingEnemies;
+        static double spawnDelay = 2000;
         static SpriteFont Arial32;
         static Menu menu;
         static Background background;
@@ -37,7 +42,6 @@ namespace SpaceShooter
         static int wave = 0;
         static int enemiesPerWave = 4;
         
-
         // Gamestates
         public enum State
         {
@@ -54,6 +58,8 @@ namespace SpaceShooter
         public static void Initialize() { 
             powerups = new List<Powerup>();
             highScore = new HighScore(10);
+            pendingEnemies = new List<PendingEnemy>();
+            warnings = new List<Warning>();
         }
 
         // LoadContent - anropas av game1.loadcontent när spelet startar
@@ -71,6 +77,7 @@ namespace SpaceShooter
             goldCoinSprite = content.Load<Texture2D>("coin");
             bulletBoostSprite = content.Load<Texture2D>("bulletboost");
             heartSprite = content.Load<Texture2D>("heart");
+            warningSprite = content.Load<Texture2D>("warning");
             menu = new Menu((int)State.Menu);
             menu.AddItem(content.Load<Texture2D>("Menu/start"), (int)State.Run, window, content);
             menu.AddItem(content.Load<Texture2D>("Menu/highscore"), (int)State.HighScore, window, content);
@@ -113,10 +120,20 @@ namespace SpaceShooter
             // Uppdatera spelarens position
             player.Update(window, gameTime);
 
+            foreach (PendingEnemy pe in pendingEnemies.ToList())
+            {
+                if (gameTime.TotalGameTime.TotalMilliseconds >= pe.SpawnTime)
+                {
+                    enemies.Add(pe.Enemy);
+                    pendingEnemies.Remove(pe);
+                }
+            }
+
             // Loopa genom alla fiender och kolla kollison med kulor och spelare, samt uppdatera deras position
             foreach (Enemy e in enemies.ToList())
             {
                 // Kontrollerar kollison mellan fiende och kulor
+
                 foreach (Bullet b in player.Bullets)
                 {
                     if (e.CheckCollision(b)) // Vid kollison
@@ -202,6 +219,18 @@ namespace SpaceShooter
                 }
             }
 
+            foreach (Warning w in warnings.ToList())
+            {
+                if (w.IsAlive)
+                {
+                    w.Update(gameTime);
+                }
+                else
+                {
+                    warnings.Remove(w);
+                }
+            }
+
             if (wave == 6 || wave == 11) //Spawnar fiender under bossvågarna
             {
                 int enemySpawn = random.Next(0, 500);
@@ -213,7 +242,8 @@ namespace SpaceShooter
                     int rndX = random.Next(0, window.ClientBounds.Width - mineTexture.Width);
                     int rndY = random.Next(0, window.ClientBounds.Height / 2);
 
-                    enemies.Add(new Mine(mineTexture, rndX, 0));
+                    warnings.Add(new Warning(warningSprite, rndX, rndY, gameTime, spawnDelay)); // Spawnar en varning innan fienden spawnas
+                    QueueEnemy(new Tripod(mineTexture, rndX, rndY), gameTime, spawnDelay);
                 }
 
                 if ( enemySpawn > 3+10 && wave+10 > enemySpawn)
@@ -221,8 +251,8 @@ namespace SpaceShooter
                     Texture2D tripodTexture = content.Load<Texture2D>("tripod");
 
                     int rndX = random.Next(0, window.ClientBounds.Width - tripodTexture.Width);
-
-                    enemies.Add(new Tripod(tripodTexture, rndX, 0));
+                    warnings.Add(new Warning(warningSprite, rndX, 0, gameTime, spawnDelay)); // Spawnar en varning innan fienden spawnas
+                    QueueEnemy(new Tripod(tripodTexture, rndX, 0), gameTime, spawnDelay);
                 }
             }
 
@@ -231,14 +261,14 @@ namespace SpaceShooter
                 return State.EnterHighScore;
             }
 
-            if (enemies.Count == 0)
+            if (enemies.Count == 0 && pendingEnemies.Count == 0)
             {
                 wave++;
                 if (wave > 3)
                 {
                     enemiesPerWave += 1; // Makes game progressively harder
                 }
-                GenerateEnemies(window, content, enemiesPerWave);
+                GenerateEnemies(window, content, enemiesPerWave, gameTime);
             }
 
             return State.Run;
@@ -259,9 +289,14 @@ namespace SpaceShooter
             {
                 p.Draw(_spriteBatch);
             }
+            foreach (Warning w in warnings) // Rita varningar
+            {
+                w.Draw(_spriteBatch);
+            }
             // Rita poäng och liv
             _spriteBatch.DrawString(Arial32, "Poäng: " + player.Points, new Microsoft.Xna.Framework.Vector2(0, 0), Color.White);
             _spriteBatch.DrawString(Arial32, "Liv: " + player.Life, new Microsoft.Xna.Framework.Vector2(0, 30), Color.White);
+            _spriteBatch.DrawString(Arial32, "Våg: " + wave, new Microsoft.Xna.Framework.Vector2(0, 60), Color.White);
         }
 
         //HighScoreUpdate - uppdate metod för highscore skärmen
@@ -316,20 +351,21 @@ namespace SpaceShooter
             
         }
         // GenerateEnemies - metod för att generera fiender, anropas i början av varje våg
-        public static void GenerateEnemies(GameWindow window, ContentManager content, int count)
+        public static void GenerateEnemies(GameWindow window, ContentManager content, int count, GameTime gameTime)
         {
-            Texture2D tmpSprite = content.Load<Texture2D>("boss");
-            
             // Spawnar bossar på våg 6 och 11, spawnar då inte vanliga fiender i början av vågen
+            Texture2D tmpSprite = content.Load<Texture2D>("boss");
             if (wave == 6)
             {
-                enemies.Add(new Boss1(tmpSprite, content.Load<Texture2D>("enemybullet"), window.ClientBounds.Width / 2 - tmpSprite.Width / 2, 0));
+                warnings.Add(new Warning(warningSprite, window.ClientBounds.Width / 2 - tmpSprite.Width / 2, 0, gameTime, spawnDelay)); // Spawnar en varning innan fienden spawnas
+                QueueEnemy(new Boss1(tmpSprite, content.Load<Texture2D>("enemybullet"), window.ClientBounds.Width / 2 - tmpSprite.Width / 2, 0), gameTime, spawnDelay);
                 return;
             }
             else if (wave == 11)
             {
                 tmpSprite = content.Load<Texture2D>("boss2");
-                enemies.Add(new Boss2(tmpSprite, content.Load<Texture2D>("enemybullet"), window.ClientBounds.Width / 2 - tmpSprite.Width / 2, 0));
+                warnings.Add(new Warning(warningSprite, window.ClientBounds.Width / 2 - tmpSprite.Width / 2, 0, gameTime, spawnDelay)); // Spawnar en varning innan fienden spawnas
+                QueueEnemy(new Boss2(tmpSprite, content.Load<Texture2D>("enemybullet"), window.ClientBounds.Width / 2 - tmpSprite.Width / 2, 0), gameTime, spawnDelay);
                 return;
             }
             else
@@ -344,7 +380,8 @@ namespace SpaceShooter
                     {
                         int rndX = random.Next(0, window.ClientBounds.Width - tmpSprite.Width);
                         int rndY = random.Next(0, window.ClientBounds.Height / 2);
-                        enemies.Add(new Mine(tmpSprite, rndX, rndY));
+                        warnings.Add(new Warning(warningSprite, rndX, rndY, gameTime, spawnDelay)); // Spawnar en varning innan fienden spawnas
+                        QueueEnemy(new Mine(tmpSprite, rndX, rndY), gameTime, spawnDelay);
                     }
                 }
 
@@ -354,7 +391,8 @@ namespace SpaceShooter
                 {
                     int rndX = random.Next(0, window.ClientBounds.Width - tmpSprite.Width);
                     int rndY = random.Next(0, window.ClientBounds.Height / 2);
-                    enemies.Add(new Astroid(tmpSprite, rndX, rndY));
+                    warnings.Add(new Warning(warningSprite, rndX, rndY, gameTime, spawnDelay)); // Spawnar en varning innan fienden spawnas
+                    QueueEnemy(new Astroid(tmpSprite, rndX, rndY), gameTime, spawnDelay);
                 }
 
                 if (wave > 2)
@@ -365,14 +403,15 @@ namespace SpaceShooter
                     {
                         int rndX = random.Next(0, window.ClientBounds.Width - tmpSprite.Width);
                         int rndY = random.Next(0, window.ClientBounds.Height / 2);
-                        enemies.Add(new Tripod(tmpSprite, rndX, rndY));
+                        warnings.Add(new Warning(warningSprite, rndX, rndY, gameTime, spawnDelay)); // Spawnar en varning innan fienden spawnas
+                        QueueEnemy(new Tripod(tmpSprite, rndX, rndY), gameTime, spawnDelay);
                     }
                 }
             }
         }
 
         // Reset - metod för att starta om spelet, anropas när spelaren dör och efter att highscore matats in
-        public static void Reset (GameWindow window, ContentManager content)
+        public static void Reset (GameWindow window, ContentManager content, GameTime gameTime)
         {
             player.Reset(380, 400, 2.5f, 4.5f);
 
@@ -381,10 +420,12 @@ namespace SpaceShooter
             player.Life = 3;
 
             enemies.Clear();
+            pendingEnemies.Clear();
+            warnings.Clear();
             powerups.Clear();
             wave = 1;
             enemiesPerWave = 4;
-            GenerateEnemies(window, content, enemiesPerWave);
+            GenerateEnemies(window, content, enemiesPerWave, gameTime);
         }
 
         // SaveHighScore - metod för att spara highscore till fil, anropas när highscore matats in
@@ -400,7 +441,7 @@ namespace SpaceShooter
             {
                 highScore.SaveToFile("highscore.txt");
 
-                Reset(gameWindow, gameContent);
+                Reset(gameWindow, gameContent, gameTime);
 
                 ignoreInput = true;
 
@@ -416,6 +457,23 @@ namespace SpaceShooter
             background.Draw(spriteBatch);
 
             highScore.EnterDraw(spriteBatch, Arial32);
+        }
+
+        class PendingEnemy
+        {
+            public Enemy Enemy;
+            public double SpawnTime;
+
+            public PendingEnemy(Enemy enemy, double spawnTime)
+            {
+                Enemy = enemy;
+                SpawnTime = spawnTime;
+            }
+        }
+
+        public static void QueueEnemy(Enemy enemy, GameTime gameTime, double delay)
+        {
+            pendingEnemies.Add(new PendingEnemy(enemy, gameTime.TotalGameTime.TotalMilliseconds + delay));
         }
     }
 }

@@ -112,7 +112,7 @@ namespace SpaceShooter
                 // Det aktiva valet ritas ut med annan ton
                 if (i == selected)
                 {
-                    _spriteBatch.Draw(menu[i].Texture, menu[i].Position, Color.LightYellow);
+                    _spriteBatch.Draw(menu[i].Texture, menu[i].Position, Color.Green);
                 }
 
                 // De andra valen ritas ut i normal ton

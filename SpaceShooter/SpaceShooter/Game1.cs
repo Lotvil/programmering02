@@ -46,14 +46,11 @@ namespace SpaceShooter
         //Spelets huvudloop, där all logik kring states körs
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
-                Exit();
-
             // Gör så att spelaren kan trycka på escape för att komma tillbaka till menyn när den spelar
             if (Keyboard.GetState().IsKeyDown(Keys.Escape) &&
                 GameElements.currentState == GameElements.State.Run)
             {
-                Exit();
+                GameElements.currentState = GameElements.State.EnterHighScore;
             }
 
             GameElements.State previousState = GameElements.currentState;
@@ -82,7 +79,7 @@ namespace SpaceShooter
 
             if (previousState == GameElements.State.Run && GameElements.currentState == GameElements.State.Menu)
             {
-                GameElements.Reset(Window, Content);
+                GameElements.Reset(Window, Content, gameTime); // Starta om spelet när man går tillbaka till menyn från att ha spelat
             }
             
             base.Update(gameTime);
